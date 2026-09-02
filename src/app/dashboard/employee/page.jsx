@@ -1,71 +1,64 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, Button, Modal, TextField, Label, InputGroup, Select, ListBox } from '@heroui/react';
+import { Card, Button } from '@heroui/react';
 import {
-    Clock,
-    LogOut,
-    CalendarCheck,
-    CheckCircle2,
-    AlertCircle,
-    Briefcase,
-    TrendingUp,
-    PlusCircle,
-    Calendar,
-    X
+    Clock, LogOut, CalendarCheck, CheckCircle2, AlertCircle, Briefcase, TrendingUp, PlusCircle, Calendar, X
 } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function EmployeeDashboard() {
     const [currentTime, setCurrentTime] = useState(null);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
-    const [checkInTime, setCheckInTime] = useState(null);
+    const [checkInTimestamp, setCheckInTimestamp] = useState(null);
+    const [elapsedTime, setElapsedTime] = useState('0h 0m 0s');
 
-    // Modal Open State
+    // Leave System State
+    const [leaveBalance, setLeaveBalance] = useState(18);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [leaveData, setLeaveData] = useState({
-        type: 'Casual Leave',
-        startDate: '',
-        endDate: '',
-        reason: ''
-    });
+    const [leaveData, setLeaveData] = useState({ type: 'Casual Leave', startDate: '', endDate: '', reason: '' });
 
+    // Live Clock & Working Hours Calculation Engine
     useEffect(() => {
         setCurrentTime(new Date());
         const timer = setInterval(() => {
-            setCurrentTime(new Date());
+            const now = new Date();
+            setCurrentTime(now);
+
+            if (isCheckedIn && checkInTimestamp) {
+                const diffMs = now - checkInTimestamp;
+                const totalSeconds = Math.floor(diffMs / 1000);
+                const hrs = Math.floor(totalSeconds / 3600);
+                const mins = Math.floor((totalSeconds % 3600) / 60);
+                const secs = totalSeconds % 60;
+                setElapsedTime(`${hrs}h ${mins}m ${secs}s`);
+            }
         }, 1000);
+
         return () => clearInterval(timer);
-    }, []);
+    }, [isCheckedIn, checkInTimestamp]);
 
     const handleToggleCheckIn = () => {
         if (!isCheckedIn) {
             setIsCheckedIn(true);
-            setCheckInTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            setCheckInTimestamp(new Date());
         } else {
             setIsCheckedIn(false);
-            setCheckInTime(null);
+            setCheckInTimestamp(null);
+            setElapsedTime('0h 0m 0s');
         }
     };
 
     const handleLeaveSubmit = (e) => {
         e.preventDefault();
-        console.log('Leave Submitted:', leaveData);
+        toast.success(`Leave request for ${leaveData.type} submitted successfully!`);
         setIsModalOpen(false);
         setLeaveData({ type: 'Casual Leave', startDate: '', endDate: '', reason: '' });
     };
 
-    const logs = [
-        { date: 'Sep 01, 2026', checkIn: '09:15 AM', checkOut: '06:10 PM', hours: '8h 55m', status: 'On Time' },
-        { date: 'Aug 31, 2026', checkIn: '09:28 AM', checkOut: '06:30 PM', hours: '9h 02m', status: 'Late Arrival' },
-        { date: 'Aug 28, 2026', checkIn: '09:05 AM', checkOut: '06:00 PM', hours: '8h 55m', status: 'On Time' },
-        { date: 'Aug 27, 2026', checkIn: '09:10 AM', checkOut: '06:15 PM', hours: '9h 05m', status: 'On Time' },
-    ];
-
     return (
         <div className="min-h-screen bg-slate-50">
-
-            {/* Top Header */}
             <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
                 <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
@@ -77,7 +70,6 @@ export default function EmployeeDashboard() {
                             <p className="text-xs text-slate-500">InnerEye AMS</p>
                         </div>
                     </div>
-
                     <div className="flex items-center gap-4">
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-semibold text-slate-800">Rahul Sharma</p>
@@ -85,18 +77,14 @@ export default function EmployeeDashboard() {
                         </div>
                         <Link href="/login">
                             <Button size="sm" variant="flat" color="danger" className="rounded-xl font-medium">
-                                <LogOut className="w-4 h-4" />
-                                Logout
+                                <LogOut className="w-4 h-4" /> Logout
                             </Button>
                         </Link>
                     </div>
                 </div>
             </header>
 
-            {/* Main Content */}
             <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
-
-                {/* Welcome & Check-In Box */}
                 <div className="grid md:grid-cols-3 gap-6">
                     <Card className="md:col-span-2 p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl shadow-xl flex flex-col justify-between">
                         <div className="space-y-2">
@@ -105,7 +93,7 @@ export default function EmployeeDashboard() {
                             </span>
                             <h2 className="text-2xl md:text-3xl font-extrabold">Rahul Sharma</h2>
                             <p className="text-slate-300 text-sm">
-                                Have a productive day! Don't forget to mark your check-out before leaving.
+                                Have a productive day! Track your shift hours in real time.
                             </p>
                         </div>
 
@@ -122,58 +110,54 @@ export default function EmployeeDashboard() {
                         </div>
                     </Card>
 
+                    {/* Dynamic Working Timer Action Card */}
                     <Card className="p-6 bg-white border border-slate-200 rounded-2xl shadow-md flex flex-col justify-between items-center text-center space-y-4">
                         <div className="space-y-1">
                             <span className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full ${isCheckedIn ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
                                 }`}>
                                 <span className={`w-2 h-2 rounded-full ${isCheckedIn ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
-                                {isCheckedIn ? 'Currently Checked In' : 'Not Checked In Yet'}
+                                {isCheckedIn ? 'Currently On Duty' : 'Not Checked In'}
                             </span>
-                            <h3 className="text-lg font-bold text-slate-800 pt-2">Attendance Action</h3>
-                            <p className="text-xs text-slate-500">
-                                {isCheckedIn ? `Checked in at ${checkInTime}` : 'Click below to log your entry for today'}
-                            </p>
+                            <h3 className="text-lg font-bold text-slate-800 pt-2">Today's Shift Tracker</h3>
+                            {isCheckedIn && (
+                                <div className="text-xl font-mono font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-200 mt-1">
+                                    {elapsedTime}
+                                </div>
+                            )}
                         </div>
 
                         <Button
                             size="lg"
                             color={isCheckedIn ? "danger" : "primary"}
                             onClick={handleToggleCheckIn}
-                            className={`w-full font-bold shadow-lg py-6 rounded-xl transition-all ${isCheckedIn
-                                    ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-rose-500/20'
-                                    : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20'
+                            className={`w-full font-bold shadow-lg py-6 rounded-xl transition-all ${isCheckedIn ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'
                                 }`}
                         >
                             <Clock className="w-5 h-5" />
                             {isCheckedIn ? 'Check-Out Now' : 'Check-In Now'}
                         </Button>
-
-                        <p className="text-[11px] text-slate-400">
-                            Standard office time: 09:00 AM - 06:00 PM
-                        </p>
                     </Card>
                 </div>
 
-                {/* Stats Grid & Leave Apply Action */}
+                {/* Stats Section with Live Leave Balance */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <h3 className="text-lg font-bold text-slate-800">Performance Summary</h3>
                     <Button
                         color="primary"
                         onClick={() => setIsModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center gap-2 shadow-md shadow-blue-500/20"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center gap-2"
                     >
-                        <PlusCircle className="w-5 h-5" />
-                        Apply For Leave
+                        <PlusCircle className="w-5 h-5" /> Apply For Leave
                     </Button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <Card className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <Card className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Leave Balance</p>
-                                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">18 Days</h3>
-                                <p className="text-xs text-emerald-600 font-medium mt-1">Annual Paid Quota</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase">Available Leave Balance</p>
+                                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">{leaveBalance} Days</h3>
+                                <p className="text-xs text-emerald-600 font-medium mt-1">Annual Quota</p>
                             </div>
                             <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
                                 <CalendarCheck className="w-6 h-6" />
@@ -181,12 +165,12 @@ export default function EmployeeDashboard() {
                         </div>
                     </Card>
 
-                    <Card className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <Card className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hours Worked (This Month)</p>
-                                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">168 hrs</h3>
-                                <p className="text-xs text-blue-600 font-medium mt-1">Avg 8.4 hrs/day</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase">Shift Time Today</p>
+                                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">{isCheckedIn ? elapsedTime : '0h 0m'}</h3>
+                                <p className="text-xs text-blue-600 font-medium mt-1">Live Calculation</p>
                             </div>
                             <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
                                 <Clock className="w-6 h-6" />
@@ -194,12 +178,12 @@ export default function EmployeeDashboard() {
                         </div>
                     </Card>
 
-                    <Card className="p-5 bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+                    <Card className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Punctuality Rate</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase">Punctuality Rate</p>
                                 <h3 className="text-2xl font-extrabold text-slate-800 mt-1">96%</h3>
-                                <p className="text-xs text-emerald-600 font-medium mt-1">+2% from last month</p>
+                                <p className="text-xs text-emerald-600 font-medium mt-1">On-Time Score</p>
                             </div>
                             <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
                                 <TrendingUp className="w-6 h-6" />
@@ -207,154 +191,59 @@ export default function EmployeeDashboard() {
                         </div>
                     </Card>
                 </div>
-
-                {/* Logs Table */}
-                <Card className="p-6 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
-                    <div className="flex items-center justify-between border-b pb-4">
-                        <div>
-                            <h3 className="text-lg font-bold text-slate-800">Recent Attendance Activity</h3>
-                            <p className="text-xs text-slate-500">Your daily check-in and check-out summary</p>
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm border-collapse">
-                            <thead>
-                                <tr className="border-b border-slate-200 bg-slate-50 text-slate-600 text-xs uppercase font-semibold">
-                                    <th className="py-3 px-4">Date</th>
-                                    <th className="py-3 px-4">Check-In</th>
-                                    <th className="py-3 px-4">Check-Out</th>
-                                    <th className="py-3 px-4">Total Hours</th>
-                                    <th className="py-3 px-4">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 text-slate-700">
-                                {logs.map((log, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
-                                        <td className="py-3.5 px-4 font-medium text-slate-800">{log.date}</td>
-                                        <td className="py-3.5 px-4">{log.checkIn}</td>
-                                        <td className="py-3.5 px-4">{log.checkOut}</td>
-                                        <td className="py-3.5 px-4 font-semibold text-slate-800">{log.hours}</td>
-                                        <td className="py-3.5 px-4">
-                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${log.status === 'On Time'
-                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                    : 'bg-amber-50 text-amber-700 border border-amber-200'
-                                                }`}>
-                                                {log.status === 'On Time' ? <CheckCircle2 className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                                                {log.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </Card>
-
             </main>
 
             {/* Leave Application Modal Popup */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="w-full max-w-lg bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 relative space-y-4">
-
-                        {/* Modal Header */}
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                    <div className="w-full max-w-lg bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 space-y-4">
                         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div className="flex items-center gap-2">
                                 <Calendar className="w-5 h-5 text-blue-600" />
-                                <div>
-                                    <h3 className="text-lg font-bold text-slate-800">Apply for Leave</h3>
-                                    <p className="text-xs text-slate-500">Submit request for HR approval</p>
-                                </div>
+                                <h3 className="text-lg font-bold text-slate-800">Apply for Leave</h3>
                             </div>
-                            <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
+                            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-
-                        {/* Modal Form */}
                         <form onSubmit={handleLeaveSubmit} className="space-y-4">
-
-                            {/* Leave Type */}
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-slate-700 block">Leave Type</label>
+                            <div>
+                                <label className="text-xs font-semibold text-slate-700 block mb-1">Leave Type</label>
                                 <select
                                     value={leaveData.type}
                                     onChange={(e) => setLeaveData({ ...leaveData, type: e.target.value })}
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-sm outline-none"
                                 >
                                     <option value="Casual Leave">Casual Leave</option>
                                     <option value="Sick Leave">Sick Leave</option>
                                     <option value="Earned Leave">Earned Leave</option>
                                 </select>
                             </div>
-
-                            {/* Start & End Date */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-slate-700 block">Start Date</label>
-                                    <input
-                                        type="date"
-                                        value={leaveData.startDate}
-                                        onChange={(e) => setLeaveData({ ...leaveData, startDate: e.target.value })}
-                                        required
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-700 block mb-1">Start Date</label>
+                                    <input type="date" required value={leaveData.startDate} onChange={(e) => setLeaveData({ ...leaveData, startDate: e.target.value })} className="w-full px-3 py-2 border rounded-xl text-sm" />
                                 </div>
-
-                                <div className="space-y-1">
-                                    <label className="text-xs font-semibold text-slate-700 block">End Date</label>
-                                    <input
-                                        type="date"
-                                        value={leaveData.endDate}
-                                        onChange={(e) => setLeaveData({ ...leaveData, endDate: e.target.value })}
-                                        required
-                                        className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-700 block mb-1">End Date</label>
+                                    <input type="date" required value={leaveData.endDate} onChange={(e) => setLeaveData({ ...leaveData, endDate: e.target.value })} className="w-full px-3 py-2 border rounded-xl text-sm" />
                                 </div>
                             </div>
-
-                            {/* Reason */}
-                            <div className="space-y-1">
-                                <label className="text-xs font-semibold text-slate-700 block">Reason for Leave</label>
-                                <input
-                                    type="text"
-                                    placeholder="E.g., Personal work or medical emergency"
-                                    value={leaveData.reason}
-                                    onChange={(e) => setLeaveData({ ...leaveData, reason: e.target.value })}
-                                    required
-                                    className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                            <div>
+                                <label className="text-xs font-semibold text-slate-700 block mb-1">Reason</label>
+                                <input type="text" placeholder="Reason for leave" required value={leaveData.reason} onChange={(e) => setLeaveData({ ...leaveData, reason: e.target.value })} className="w-full px-3 py-2 border rounded-xl text-sm" />
                             </div>
-
-                            {/* Modal Footer Actions */}
-                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                                <Button
-                                    type="button"
-                                    variant="flat"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="rounded-xl font-medium"
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    color="primary"
-                                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold px-5"
-                                >
-                                    Submit Request
-                                </Button>
+                            <div className="flex justify-end gap-3 pt-4 border-t">
+                                <Button type="button" variant="flat" onClick={() => setIsModalOpen(false)}>Cancel</Button>
+                                <Button type="submit" color="primary" className="bg-blue-600 text-white">Submit Request</Button>
                             </div>
-
                         </form>
                     </div>
                 </div>
             )}
-
         </div>
     );
 }
+
+
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, Button, Tabs, TextField, Label, InputGroup } from '@heroui/react';
 import { ShieldCheck, Mail, Lock, UserCheck, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState('employee');
@@ -13,9 +14,23 @@ export default function LoginPage() {
 
   const toggleVisibility = () => setIsVisible(!isVisible);
 
-  const handleLogin = (e) => {
+  const handleLogin = async(e) => {
     e.preventDefault();
     console.log('Logging in as:', selectedRole, { email, password });
+
+    await signIn.email({
+      email,
+      password,
+      callbackURL: "/dashboard/employee",
+    }, {
+      onRequest: () => console.log("Logging in..."),
+      onSuccess: () => {
+        toast.success("Login successful!");
+      },
+      onError: (ctx) => {
+        toast.error(ctx.error.message);
+      }
+    });
 
   };
 
@@ -155,3 +170,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
