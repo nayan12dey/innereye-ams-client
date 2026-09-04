@@ -118,7 +118,7 @@ export default function Sidebar() {
                 <div className="p-4 border-t border-slate-100 space-y-2">
 
                     {/* Quick Switch Link (For Demo Testing) */}
-                    <Link href={isAdmin ? '/dashboard/employee' : '/dashboard/admin'}>
+                    <Link href={isAdmin ? '/dashboard/employee' : '/dashboard/hr'}>
                         <Button size="sm" variant="flat" className="w-full bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-xl text-xs">
                             Switch to {isAdmin ? 'Employee' : 'Admin'}
                         </Button>

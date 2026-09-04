@@ -3,12 +3,18 @@
 import { useState, useEffect } from 'react';
 import { Card, Button } from '@heroui/react';
 import {
-    Clock, LogOut, CalendarCheck, CheckCircle2, AlertCircle, Briefcase, TrendingUp, PlusCircle, Calendar, X
+    Clock, LogOut, CalendarCheck, CheckCircle2, AlertCircle,
+    Briefcase, TrendingUp, PlusCircle, Calendar, X
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { useSession } from '@/lib/auth-client';
 
 export default function EmployeeDashboard() {
+    const { data: session, isPending } = useSession();
+
+    const employeeId = session?.user?.empId;
+
     const [currentTime, setCurrentTime] = useState(null);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
     const [checkInTimestamp, setCheckInTimestamp] = useState(null);
@@ -18,6 +24,51 @@ export default function EmployeeDashboard() {
     const [leaveBalance, setLeaveBalance] = useState(18);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [leaveData, setLeaveData] = useState({ type: 'Casual Leave', startDate: '', endDate: '', reason: '' });
+
+
+
+    useEffect(() => {
+        if (isPending || !employeeId) return;
+
+        const fetchTodayAttendance = async () => {
+            try {
+                const response = await fetch(
+                    `http://localhost:5000/api/attendance/today/${employeeId}`
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to fetch attendance');
+                }
+
+                if (data.attendance) {
+                    const attendance = data.attendance;
+
+                    if (attendance.checkIn && !attendance.checkOut) {
+                        setIsCheckedIn(true);
+                        setCheckInTimestamp(new Date(attendance.checkIn));
+                    }
+
+                    if (attendance.checkOut) {
+                        setIsCheckedIn(false);
+                        setCheckInTimestamp(null);
+
+                        setElapsedTime(
+                            `${Math.floor(attendance.workingHours)}h ${Math.round(
+                                (attendance.workingHours % 1) * 60
+                            )}m`
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error('Attendance fetch error:', error);
+                toast.error('Failed to load today\'s attendance');
+            }
+        };
+
+        fetchTodayAttendance();
+    }, [employeeId, isPending]);
 
     // Live Clock & Working Hours Calculation Engine
     useEffect(() => {
@@ -39,14 +90,77 @@ export default function EmployeeDashboard() {
         return () => clearInterval(timer);
     }, [isCheckedIn, checkInTimestamp]);
 
-    const handleToggleCheckIn = () => {
-        if (!isCheckedIn) {
+    const handleToggleCheckIn = async () => {
+        try {
+            // CHECK-OUT
+            if (isCheckedIn) {
+                const response = await fetch(
+                    'http://localhost:5000/api/attendance/check-out',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            employeeId,
+                        }),
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Check-out failed');
+                }
+
+                setIsCheckedIn(false);
+                setCheckInTimestamp(null);
+
+                const hours = data.workingHours || 0;
+
+                const hrs = Math.floor(hours);
+                const mins = Math.round((hours - hrs) * 60);
+
+                setElapsedTime(`${hrs}h ${mins}m`);
+
+                toast.success(
+                    `Check-out successful! Working hours: ${hrs}h ${mins}m`
+                );
+
+                return;
+            }
+
+            // CHECK-IN
+            const response = await fetch(
+                'http://localhost:5000/api/attendance/check-in',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        employeeId,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Check-in failed');
+            }
+
+            const attendance = data.attendance;
+
             setIsCheckedIn(true);
-            setCheckInTimestamp(new Date());
-        } else {
-            setIsCheckedIn(false);
-            setCheckInTimestamp(null);
+            setCheckInTimestamp(new Date(attendance.checkIn));
             setElapsedTime('0h 0m 0s');
+
+            toast.success('Check-in successful!');
+
+        } catch (error) {
+            console.error('Attendance error:', error);
+            toast.error(error.message || 'Attendance action failed');
         }
     };
 
