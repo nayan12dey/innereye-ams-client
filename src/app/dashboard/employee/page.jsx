@@ -42,28 +42,41 @@ export default function EmployeeDashboard() {
                     throw new Error(data.message || 'Failed to fetch attendance');
                 }
 
-                if (data.attendance) {
-                    const attendance = data.attendance;
+                const attendance = data.attendance;
+                console.log('Today Attendance:', attendance);
 
-                    if (attendance.checkIn && !attendance.checkOut) {
-                        setIsCheckedIn(true);
-                        setCheckInTimestamp(new Date(attendance.checkIn));
-                    }
-
-                    if (attendance.checkOut) {
-                        setIsCheckedIn(false);
-                        setCheckInTimestamp(null);
-
-                        setElapsedTime(
-                            `${Math.floor(attendance.workingHours)}h ${Math.round(
-                                (attendance.workingHours % 1) * 60
-                            )}m`
-                        );
-                    }
+                // No attendance today
+                if (!attendance) {
+                    setIsCheckedIn(false);
+                    setCheckInTimestamp(null);
+                    setElapsedTime('0h 0m 0s');
+                    return;
                 }
+
+                // Checked-in but not checked-out
+                if (attendance.checkIn && !attendance.checkOut) {
+                    setIsCheckedIn(true);
+                    setCheckInTimestamp(new Date(attendance.checkIn));
+
+                    return;
+                }
+
+                // Already checked-out
+                if (attendance.checkOut) {
+                    setIsCheckedIn(false);
+                    setCheckInTimestamp(null);
+
+                    const hours = attendance.workingHours || 0;
+
+                    const hrs = Math.floor(hours);
+                    const mins = Math.round((hours - hrs) * 60);
+
+                    setElapsedTime(`${hrs}h ${mins}m`);
+                }
+
             } catch (error) {
                 console.error('Attendance fetch error:', error);
-                toast.error('Failed to load today\'s attendance');
+                toast.error("Failed to load today's attendance");
             }
         };
 
@@ -151,6 +164,7 @@ export default function EmployeeDashboard() {
             }
 
             const attendance = data.attendance;
+            console.log('Today Attendance:', attendance);
 
             setIsCheckedIn(true);
             setCheckInTimestamp(new Date(attendance.checkIn));
@@ -164,11 +178,53 @@ export default function EmployeeDashboard() {
         }
     };
 
-    const handleLeaveSubmit = (e) => {
+    const handleLeaveSubmit = async (e) => {
         e.preventDefault();
-        toast.success(`Leave request for ${leaveData.type} submitted successfully!`);
-        setIsModalOpen(false);
-        setLeaveData({ type: 'Casual Leave', startDate: '', endDate: '', reason: '' });
+
+        try {
+            const response = await fetch(
+                'http://localhost:5000/api/leaves/apply',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        employeeId,
+                        leaveType: leaveData.type,
+                        startDate: leaveData.startDate,
+                        endDate: leaveData.endDate,
+                        reason: leaveData.reason,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || 'Failed to submit leave request'
+                );
+            }
+
+            toast.success(data.message);
+
+            setIsModalOpen(false);
+
+            setLeaveData({
+                type: 'Casual Leave',
+                startDate: '',
+                endDate: '',
+                reason: '',
+            });
+
+        } catch (error) {
+            console.error('Leave request error:', error);
+
+            toast.error(
+                error.message || 'Failed to submit leave request'
+            );
+        }
     };
 
     return (

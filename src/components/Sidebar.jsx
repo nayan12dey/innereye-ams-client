@@ -21,7 +21,7 @@ export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
 
     // Check if current route is admin or employee
-    const isAdmin = pathname.includes('/admin');
+    const isHR = pathname.includes('/hr');
 
     const employeeLinks = [
         { name: 'Dashboard', href: '/dashboard/employee', icon: LayoutDashboard },
@@ -29,13 +29,13 @@ export default function Sidebar() {
         { name: 'Leave Applications', href: '/dashboard/employee/leaves', icon: CalendarDays },
     ];
 
-    const adminLinks = [
-        { name: 'Admin Overview', href: '/dashboard/admin', icon: ShieldCheck },
-        { name: 'Live Logs', href: '/dashboard/admin/logs', icon: UserCheck },
-        { name: 'Leave Management', href: '/dashboard/admin/leaves', icon: CalendarDays },
+    const hrLinks = [
+        { name: 'HR Overview', href: '/dashboard/hr', icon: ShieldCheck },
+        { name: 'Live Logs', href: '/dashboard/hr/logs', icon: UserCheck },
+        { name: 'Leave Management', href: '/dashboard/hr/leaves', icon: CalendarDays },
     ];
 
-    const currentLinks = isAdmin ? adminLinks : employeeLinks;
+    const currentLinks = isHR ? hrLinks : employeeLinks;
 
     return (
         <>
@@ -82,9 +82,9 @@ export default function Sidebar() {
                     {/* Role Indicator Badge */}
                     <div className="px-3 py-2 bg-slate-100/80 rounded-xl flex items-center justify-between border border-slate-200/60">
                         <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                            {isAdmin ? 'Admin Mode' : 'Employee Portal'}
+                            {isHR ? 'HR Mode' : 'Employee Portal'}
                         </span>
-                        <span className={`w-2 h-2 rounded-full ${isAdmin ? 'bg-purple-500' : 'bg-emerald-500'}`} />
+                        <span className={`w-2 h-2 rounded-full ${isHR ? 'bg-purple-500' : 'bg-emerald-500'}`} />
                     </div>
 
                     {/* Navigation Links */}
@@ -118,9 +118,9 @@ export default function Sidebar() {
                 <div className="p-4 border-t border-slate-100 space-y-2">
 
                     {/* Quick Switch Link (For Demo Testing) */}
-                    <Link href={isAdmin ? '/dashboard/employee' : '/dashboard/hr'}>
+                    <Link href={isHR ? '/dashboard/employee' : '/dashboard/hr'}>
                         <Button size="sm" variant="flat" className="w-full bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium rounded-xl text-xs">
-                            Switch to {isAdmin ? 'Employee' : 'Admin'}
+                            Switch to {isHR ? 'Employee' : 'HR'}
                         </Button>
                     </Link>
 
