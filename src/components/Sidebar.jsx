@@ -32,7 +32,7 @@ export default function Sidebar() {
     const hrLinks = [
         { name: 'HR Overview', href: '/dashboard/hr', icon: ShieldCheck },
         { name: 'Live Logs', href: '/dashboard/hr/logs', icon: UserCheck },
-        { name: 'Leave Management', href: '/dashboard/hr/leaves', icon: CalendarDays },
+        // { name: 'Leave Management', href: '/dashboard/hr/leaves', icon: CalendarDays },
     ];
 
     const currentLinks = isHR ? hrLinks : employeeLinks;
