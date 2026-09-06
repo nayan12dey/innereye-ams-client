@@ -6,11 +6,12 @@ import {
     Clock, LogOut, CalendarCheck, CheckCircle2, AlertCircle,
     Briefcase, TrendingUp, PlusCircle, Calendar, X
 } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { useSession } from '@/lib/auth-client';
+import { useSession, signOut } from '@/lib/auth-client';
 
 export default function EmployeeDashboard() {
+    const router = useRouter();
     const { data: session, isPending } = useSession();
 
     const employeeId = session?.user?.empId;
@@ -21,11 +22,29 @@ export default function EmployeeDashboard() {
     const [elapsedTime, setElapsedTime] = useState('0h 0m 0s');
 
     // Leave System State
-    const [leaveBalance, setLeaveBalance] = useState(18);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [leaveData, setLeaveData] = useState({ type: 'Casual Leave', startDate: '', endDate: '', reason: '' });
 
+    const leaveBalance =
+        (session?.user?.annualLeaveQuota ?? 18) -
+        (session?.user?.annualLeaveUsed ?? 0);
 
+    // Logout Handler Function
+    const handleLogout = async () => {
+        try {
+            await signOut();
+            toast.success('Logged out successfully!');
+
+            // Give toast time to appear before redirect
+            setTimeout(() => {
+                router.push('/login');
+            }, 800);
+            
+        } catch (error) {
+            console.error('Logout error:', error);
+            toast.error('Failed to log out');
+        }
+    };
 
     useEffect(() => {
         if (isPending || !employeeId) return;
@@ -57,7 +76,6 @@ export default function EmployeeDashboard() {
                 if (attendance.checkIn && !attendance.checkOut) {
                     setIsCheckedIn(true);
                     setCheckInTimestamp(new Date(attendance.checkIn));
-
                     return;
                 }
 
@@ -67,7 +85,6 @@ export default function EmployeeDashboard() {
                     setCheckInTimestamp(null);
 
                     const hours = attendance.workingHours || 0;
-
                     const hrs = Math.floor(hours);
                     const mins = Math.round((hours - hrs) * 60);
 
@@ -130,7 +147,6 @@ export default function EmployeeDashboard() {
                 setCheckInTimestamp(null);
 
                 const hours = data.workingHours || 0;
-
                 const hrs = Math.floor(hours);
                 const mins = Math.round((hours - hrs) * 60);
 
@@ -242,14 +258,18 @@ export default function EmployeeDashboard() {
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="text-right hidden sm:block">
-                            <p className="text-sm font-semibold text-slate-800">Rahul Sharma</p>
-                            <p className="text-xs text-slate-500">Software Engineer (IECS-1042)</p>
+                            <p className="text-sm font-semibold text-slate-800">{session?.user?.name}</p>
+                            <p className="text-xs text-slate-500">{session?.user?.department} ({session?.user?.empId})</p>
                         </div>
-                        <Link href="/login">
-                            <Button size="sm" variant="flat" color="danger" className="rounded-xl font-medium">
-                                <LogOut className="w-4 h-4" /> Logout
-                            </Button>
-                        </Link>
+                        <Button
+                            size="sm"
+                            variant="flat"
+                            color="danger"
+                            onClick={handleLogout}
+                            className="rounded-xl font-medium"
+                        >
+                            <LogOut className="w-4 h-4" /> Logout
+                        </Button>
                     </div>
                 </div>
             </header>
@@ -261,7 +281,7 @@ export default function EmployeeDashboard() {
                             <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-semibold rounded-full border border-blue-400/30 inline-block">
                                 Welcome Back 👋
                             </span>
-                            <h2 className="text-2xl md:text-3xl font-extrabold">Rahul Sharma</h2>
+                            <h2 className="text-2xl md:text-3xl font-extrabold">{session?.user?.name}</h2>
                             <p className="text-slate-300 text-sm">
                                 Have a productive day! Track your shift hours in real time.
                             </p>
@@ -347,19 +367,6 @@ export default function EmployeeDashboard() {
                             </div>
                         </div>
                     </Card>
-
-                    <Card className="p-5 bg-white border border-slate-200 rounded-2xl shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs font-semibold text-slate-500 uppercase">Punctuality Rate</p>
-                                <h3 className="text-2xl font-extrabold text-slate-800 mt-1">96%</h3>
-                                <p className="text-xs text-emerald-600 font-medium mt-1">On-Time Score</p>
-                            </div>
-                            <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl">
-                                <TrendingUp className="w-6 h-6" />
-                            </div>
-                        </div>
-                    </Card>
                 </div>
             </main>
 
@@ -414,6 +421,3 @@ export default function EmployeeDashboard() {
         </div>
     );
 }
-
-
-

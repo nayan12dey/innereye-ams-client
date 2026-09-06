@@ -10,7 +10,7 @@ import { signUp } from '@/lib/auth-client';
 
 export default function RegisterPage() {
   const router = useRouter();
-  
+
   // States
   const [formData, setFormData] = useState({
     name: '',
@@ -20,7 +20,7 @@ export default function RegisterPage() {
     department: 'Engineering',
     role: 'employee'
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -59,7 +59,7 @@ export default function RegisterPage() {
       }
     });
 
-    
+
   };
 
   return (
@@ -179,9 +179,13 @@ export default function RegisterPage() {
               <Select
                 className="w-full"
                 placeholder="Select Department"
-                onSelectionChange={(keys) => {
-                  const selected = Array.from(keys)[0];
-                  if (selected) setFormData({ ...formData, department: String(selected) });
+                onSelectionChange={(selected) => {
+                  if (selected) {
+                    setFormData({
+                      ...formData,
+                      department: String(selected),
+                    });
+                  }
                 }}
               >
                 <Label className="text-xs font-semibold text-slate-700 mb-1 block">Department</Label>
@@ -245,3 +249,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+
