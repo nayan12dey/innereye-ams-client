@@ -44,7 +44,7 @@ export default function LeaveApplicationsPage() {
             setIsLoadingLeaves(true);
 
             const response = await fetch(
-                `http://localhost:5000/api/leaves/employee/${employeeId}`,
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/leaves/employee/${employeeId}`,
                 {
                     method: 'GET',
                     headers: {
@@ -120,7 +120,7 @@ export default function LeaveApplicationsPage() {
             setIsSubmitting(true);
 
             const response = await fetch(
-                'http://localhost:5000/api/leaves/apply',
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/leaves/apply`,
                 {
                     method: 'POST',
                     headers: {

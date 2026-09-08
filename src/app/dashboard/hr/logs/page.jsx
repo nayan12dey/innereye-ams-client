@@ -25,7 +25,7 @@ export default function HRLogsPage() {
             setError('');
 
             const response = await fetch(
-                'http://localhost:5000/api/attendance/all'
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/attendance/all`
             );
 
             const data = await response.json();

@@ -52,7 +52,7 @@ export default function EmployeeDashboard() {
         const fetchTodayAttendance = async () => {
             try {
                 const response = await fetch(
-                    `http://localhost:5000/api/attendance/today/${employeeId}`
+                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/attendance/today/${employeeId}`
                 );
 
                 const data = await response.json();
@@ -125,7 +125,7 @@ export default function EmployeeDashboard() {
             // CHECK-OUT
             if (isCheckedIn) {
                 const response = await fetch(
-                    'http://localhost:5000/api/attendance/check-out',
+                    `${process.env.NEXT_PUBLIC_SERVER_URL}/api/attendance/check-out`,
                     {
                         method: 'POST',
                         headers: {
@@ -161,7 +161,7 @@ export default function EmployeeDashboard() {
 
             // CHECK-IN
             const response = await fetch(
-                'http://localhost:5000/api/attendance/check-in',
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/attendance/check-in`,
                 {
                     method: 'POST',
                     headers: {
@@ -199,7 +199,7 @@ export default function EmployeeDashboard() {
 
         try {
             const response = await fetch(
-                'http://localhost:5000/api/leaves/apply',
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/leaves/apply`,
                 {
                     method: 'POST',
                     headers: {

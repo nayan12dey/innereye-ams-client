@@ -27,7 +27,7 @@ export default function HRDashboard() {
             setLoading(true);
 
             const response = await fetch(
-                'http://localhost:5000/api/leaves/all',
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/leaves/all`,
                 {
                     cache: 'no-store',
                 }
@@ -66,7 +66,7 @@ export default function HRDashboard() {
             setProcessingId(id);
 
             const response = await fetch(
-                `http://localhost:5000/api/leaves/${id}/approve`,
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/leaves/${id}/approve`,
                 {
                     method: 'PUT',
                     headers: {
@@ -109,7 +109,7 @@ export default function HRDashboard() {
             setProcessingId(id);
 
             const response = await fetch(
-                `http://localhost:5000/api/leaves/${id}/reject`,
+                `${process.env.NEXT_PUBLIC_SERVER_URL}/api/leaves/${id}/reject`,
                 {
                     method: 'PUT',
                     headers: {
